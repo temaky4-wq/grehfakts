@@ -21,17 +21,28 @@ let gameState = {
 // ============================================
 // DOM ЭЛЕМЕНТЫ
 // ============================================
+// Ресурсы
 const ideasEl = document.getElementById('ideas');
 const fameEl = document.getElementById('fame');
 const writersEl = document.getElementById('writers');
 const knowledgeEl = document.getElementById('knowledge');
 const researchersEl = document.getElementById('researchers');
+
+// Лог
 const logEl = document.getElementById('log');
 
-// Создаём контейнер для сообщений
-const logContent = document.createElement('div');
-logContent.className = 'log-content';
-logEl.appendChild(logContent);
+// Кнопки управления
+const clickBtn = document.getElementById('cmd-click');
+const publishSafeBtn = document.getElementById('cmd-publish-safe');
+const publishRiskyBtn = document.getElementById('cmd-publish-risky');
+const hireWriterBtn = document.getElementById('cmd-hire-writer');
+const hireResearcherBtn = document.getElementById('cmd-hire-researcher');
+const upgradeWriterBtn = document.getElementById('cmd-upgrade-writer');
+const upgradeWriter2Btn = document.getElementById('cmd-upgrade-writer2');
+const saveBtn = document.getElementById('save-game');
+const loadBtn = document.getElementById('load-game');
+const resetBtn = document.getElementById('reset-game');
+const clearLogBtn = document.getElementById('clear-log');
 
 // ============================================
 // БАЗА ДАННЫХ
@@ -58,142 +69,110 @@ const writerMessages = [
 ];
 
 // ============================================
-// ОСНОВНЫЕ ФУНКЦИИ
+// ФУНКЦИИ ЛОГА
 // ============================================
-
-// Функция добавления записи в лог (НОВАЯ ВЕРСИЯ)
-function addLog(text, isCommand = false) {
-    const p = document.createElement('p');
+function addLog(text, type = 'normal') {
+    const message = document.createElement('div');
+    message.className = `log-message ${type}`;
+    message.innerHTML = `> ${text}`;
     
-    if (isCommand) {
-        // Для команд передаём готовую разметку
-        p.innerHTML = text;
-        
-        // Находим все команды в тексте и добавляем обработчики
-        setTimeout(() => {
-            const cmdSpans = p.querySelectorAll('.cmd');
-            cmdSpans.forEach(span => {
-                const id = span.id;
-                if (id) {
-                    // Для каждой команды ищем соответствующую функцию
-                    if (id === 'cmd-publish-safe') {
-                        span.addEventListener('click', publishSafe);
-                    } else if (id === 'cmd-publish-risky') {
-                        span.addEventListener('click', publishRisky);
-                    } else if (id === 'cmd-hire-check') {
-                        span.addEventListener('click', checkHireConditions);
-                    } else if (id === 'cmd-hire-writer') {
-                        span.addEventListener('click', hireWriter);
-                    } else if (id === 'cmd-upgrade-writer') {
-                        span.addEventListener('click', upgradeWriter);
-                    } else if (id === 'cmd-hire-researcher') {
-                        span.addEventListener('click', hireResearcher);
-                    }
-                }
-            });
-        }, 10);
+    // Добавляем в начало лога (новые сверху)
+    if (logEl.firstChild) {
+        logEl.insertBefore(message, logEl.firstChild);
     } else {
-        p.innerHTML = `> ${text}`;
+        logEl.appendChild(message);
     }
     
-    // Вставляем новое сообщение В НАЧАЛО контейнера
-    if (logContent.firstChild) {
-        logContent.insertBefore(p, logContent.firstChild);
-    } else {
-        logContent.appendChild(p);
-    }
-    
-    // Скроллим к верху (новые сообщения видны сразу)
+    // Автопрокрутка к новому сообщению
     logEl.scrollTop = 0;
+    
+    // Ограничиваем количество сообщений
+    if (logEl.children.length > 100) {
+        logEl.removeChild(logEl.lastChild);
+    }
 }
 
-// Функция для мыслей персонажа
 function addThought(text) {
-    const p = document.createElement('p');
-    p.className = 'thought';
-    p.innerHTML = `> ${text}`;
-    
-    if (logContent.firstChild) {
-        logContent.insertBefore(p, logContent.firstChild);
-    } else {
-        logContent.appendChild(p);
-    }
-    
-    logEl.scrollTop = 0;
+    addLog(text, 'thought');
 }
 
-// Обновление статус-бара
+function addFact(text) {
+    addLog(`Факт: "${text}"`, 'fact');
+}
+
+// ============================================
+// ФУНКЦИИ ИНТЕРФЕЙСА
+// ============================================
 function updateStatus() {
     ideasEl.textContent = Math.floor(gameState.ideas);
     fameEl.textContent = Math.floor(gameState.fame);
     writersEl.textContent = gameState.writers;
     knowledgeEl.textContent = gameState.knowledge.toFixed(1);
     researchersEl.textContent = gameState.researchers;
+    
+    updateButtons();
 }
 
-// Показать случайный факт
-function getRandomFact() {
-    return facts[Math.floor(Math.random() * facts.length)];
+function updateButtons() {
+    // Основные действия
+    publishSafeBtn.disabled = !gameState.hasPublished || gameState.ideas < 1;
+    publishRiskyBtn.disabled = !gameState.hasPublished || gameState.ideas < 1;
+    
+    // Штат сотрудников
+    hireWriterBtn.disabled = !gameState.hasWriterUnlocked || gameState.fame < 10 || gameState.isWriterHired;
+    hireResearcherBtn.disabled = !gameState.hasResearcherUnlocked || gameState.fame < 25;
+    
+    // Улучшения
+    upgradeWriterBtn.disabled = gameState.knowledge < 5 || !gameState.isWriterHired;
+    upgradeWriter2Btn.disabled = gameState.knowledge < 15 || !gameState.isWriterHired || gameState.writerLevel >= 3;
+    
+    // Обновляем текст кнопок с актуальными значениями
+    hireWriterBtn.textContent = `👥 Нанять писателя (${gameState.fame}/10 славы)`;
+    hireResearcherBtn.textContent = `🔍 Нанять исследователя (${gameState.fame}/25 славы)`;
+    upgradeWriterBtn.textContent = `⚡ Слепая печать (${gameState.knowledge.toFixed(1)}/5 знаний)`;
+    upgradeWriter2Btn.textContent = `🌐 Тёмные архивы (${gameState.knowledge.toFixed(1)}/15 знаний)`;
 }
 
 // ============================================
 // ИГРОВЫЕ МЕХАНИКИ
 // ============================================
-
-// Основное действие: найти факт
-document.getElementById('cmd-click').addEventListener('click', function(e) {
-    e.preventDefault();
+function findFact() {
     gameState.ideas += 1;
     gameState.factsFound += 1;
-    updateStatus();
-
-    addLog(`Факт обнаружен: "${getRandomFact()}"`);
-
-    // ТРИГГЕР 1: После первого факта открываем публикацию
-    if (gameState.factsFound === 1 && !gameState.hasPublished) {
-        addLog("<br>У вас есть материал. Можно попробовать опубликовать и получить славу.");
-        addLog("<span class='cmd' id='cmd-publish-safe'>[ ОПУБЛИКОВАТЬ БЕЗОПАСНО (1 идея → 1 слава) ]</span>", true);
+    
+    const fact = getRandomFact();
+    addFact(fact);
+    
+    // Триггеры
+    if (gameState.factsFound === 1) {
+        gameState.hasPublished = true;
+        addLog("У вас есть материал. Можно опубликовать факт.");
     }
-
-    // ТРИГГЕР 2: После 3 фактов открываем найм писателя
+    
     if (gameState.factsFound >= 3 && !gameState.hasWriterUnlocked) {
         gameState.hasWriterUnlocked = true;
-        addLog("<br>Вы накопили достаточно материала. Пора расширяться.");
-        addLog("<span class='cmd' id='cmd-hire-check'>[ ПРОВЕРИТЬ, ДОСТАТОЧНО ЛИ СЛАВЫ ДЛЯ НАЙМА? ]</span>", true);
+        addLog("Накоплено достаточно материала. Можно нанять писателя.");
     }
-});
+    
+    updateStatus();
+}
 
-// Безопасная публикация
-function publishSafe(e) {
-    if (e) e.preventDefault();
+function publishSafe() {
     if (gameState.ideas >= 1) {
         gameState.ideas -= 1;
         gameState.fame += 1;
-        gameState.hasPublished = true;
-        updateStatus();
         
         addLog("Вы опубликовали факт. Слава +1.");
         
         if (gameState.fame === 1) {
-            addThought("'Первая публикация... Теперь они обратят внимание.'");
+            addThought("Первая публикация... Теперь они обратят внимание.");
         }
         
-        // Убираем кнопку безопасной публикации
-        const safeBtn = document.querySelector('#cmd-publish-safe');
-        if (safeBtn) safeBtn.style.display = 'none';
-        
-        // Предлагаем рискованный вариант
-        addLog("<span class='cmd' id='cmd-publish-risky'>[ ОПУБЛИКОВАТЬ РИСКОВАНО (1 идея → 2 славы, 70% шанс) ]</span>", true);
-        
-        checkHireConditions();
-    } else {
-        addLog("Недостаточно идей. Соберите больше фактов.");
+        updateStatus();
     }
 }
 
-// Рискованная публикация (70% шанс)
-function publishRisky(e) {
-    if (e) e.preventDefault();
+function publishRisky() {
     if (gameState.ideas >= 1) {
         gameState.ideas -= 1;
         const success = Math.random() < 0.7;
@@ -201,121 +180,84 @@ function publishRisky(e) {
         if (success) {
             gameState.fame += 2;
             addLog("Риск оправдан! Факт вызвал сенсацию. Слава +2.");
-            addThought("'Это было слишком смело... Но работает.'");
+            addThought("Это было слишком смело... Но работает.");
         } else {
             addLog("Провал. Факт сочли фейком. Вы потеряли идею.");
-            addThought("'Они следят за каждой публикацией...'");
+            addThought("Они следят за каждой публикацией...");
         }
         
         updateStatus();
-        checkHireConditions();
     }
 }
 
-// Проверка условий для найма писателя
-function checkHireConditions(e) {
-    if (e) e.preventDefault();
-    
-    if (gameState.fame >= 10 && !gameState.isWriterHired && gameState.hasWriterUnlocked) {
-        addLog("<br>Накоплено достаточно славы для расширения штата.");
-        addLog("<span class='cmd' id='cmd-hire-writer'>[ НАНЯТЬ ПИСАТЕЛЯ (10 СЛАВЫ) ]</span>", true);
-    } else if (!gameState.isWriterHired && gameState.hasWriterUnlocked) {
-        addLog(`Для найма писателя нужно 10 славы. У вас: ${gameState.fame}. Публикуйте больше фактов.`);
-    }
-}
-
-// Найм писателя
-function hireWriter(e) {
-    if (e) e.preventDefault();
-    
+function hireWriter() {
     if (gameState.fame >= 10) {
         gameState.fame -= 10;
         gameState.writers += 1;
         gameState.isWriterHired = true;
-        updateStatus();
         
-        addLog("Вы наняли первого писателя. Он будет автоматически генерировать идеи.");
-        addThought("'Шеф, я начал разбирать архив. Тут есть... странные совпадения.'");
-        
-        // Убираем кнопку найма
-        const hireBtn = document.querySelector('#cmd-hire-writer');
-        if (hireBtn) hireBtn.style.display = 'none';
-        
-        // Предлагаем улучшение через 2 секунды
-        setTimeout(() => {
-            addLog("<br>Теперь можно улучшить вашего писателя. Знания накапливаются автоматически.");
-            addLog("<span class='cmd' id='cmd-upgrade-writer'>[ ИЗУЧИТЬ МЕТОД «СЛЕПАЯ ПЕЧАТЬ» (5 знаний) ]</span>", true);
-        }, 2000);
+        addLog("Вы наняли писателя. Он будет автоматически генерировать идеи.");
+        addThought("Шеф, я начал разбирать архив. Тут есть... странные совпадения.");
         
         startPassiveIncome();
-    }
-}
-
-// Улучшение писателя
-function upgradeWriter(e) {
-    if (e) e.preventDefault();
-    
-    if (gameState.knowledge >= 5) {
-        gameState.knowledge -= 5;
-        gameState.writerLevel += 1;
-        gameState.upgrades.push('blind_typing');
         updateStatus();
-        
-        addLog("Вы обучили писателя методу слепой печати. Теперь он генерирует на 1 идею больше в секунду.");
-        addThought("'Скорость работы выросла... но и внимание к нам тоже.'");
-        
-        // Убираем кнопку
-        const btn = document.querySelector('#cmd-upgrade-writer');
-        if (btn) btn.style.display = 'none';
-        
-        // Разблокируем ресерчеров
-        unlockResearcher();
-        
-        // Предлагаем следующее улучшение через 10 секунд
-        setTimeout(() => {
-            if (gameState.writerLevel < 3) {
-                addLog("<span class='cmd' id='cmd-upgrade-writer2'>[ НАЙТИ ИСТОЧНИКИ В ТЁМНОМ НЕТЕ (15 знаний) ]</span>", true);
-                // Обработчик добавится автоматически через addLog
-            }
-        }, 10000);
-    } else {
-        addLog("Недостаточно знаний. Нужно 5. Знания накапливаются медленно или можно нанять ресерчеров.");
     }
 }
 
-// Разблокировка ресерчеров
-function unlockResearcher() {
-    if (!gameState.hasResearcherUnlocked) {
-        gameState.hasResearcherUnlocked = true;
-        setTimeout(() => {
-            addLog("<br>Доступен новый отдел: ИССЛЕДОВАНИЯ.");
-            addLog("Ресерчеры не пишут факты, но изучают архивы, добывая знания для улучшений.");
-            addLog("<span class='cmd' id='cmd-hire-researcher'>[ НАНЯТЬ РЕСЕРЧЕРА (25 славы) ]</span>", true);
-        }, 3000);
-    }
-}
-
-// Найм ресерчера
-function hireResearcher(e) {
-    if (e) e.preventDefault();
-    
+function hireResearcher() {
     if (gameState.fame >= 25) {
         gameState.fame -= 25;
         gameState.researchers += 1;
         gameState.isResearcherHired = true;
+        
+        addLog("Вы наняли исследователя. Он будет добывать знания из архивов.");
+        addThought("Первая находка: фотография 1973 года. На ней... наш логотип?");
+        
         updateStatus();
-        
-        addLog("Вы наняли ресерчера. Он будет добывать знания из архивов.");
-        addThought("'Первая находка: фотография 1973 года. На ней... наш логотип?'");
-        
-        const btn = document.querySelector('#cmd-hire-researcher');
-        if (btn) btn.style.display = 'none';
-    } else {
-        addLog(`Нужно 25 славы для найма ресерчера. У вас: ${gameState.fame}.`);
     }
 }
 
-// Пассивный доход
+function upgradeWriter() {
+    if (gameState.knowledge >= 5) {
+        gameState.knowledge -= 5;
+        gameState.writerLevel += 1;
+        gameState.upgrades.push('blind_typing');
+        
+        addLog("Вы обучили писателя методу слепой печати. Теперь он генерирует на 1 идею больше в секунду.");
+        addThought("Скорость работы выросла... но и внимание к нам тоже.");
+        
+        if (!gameState.hasResearcherUnlocked) {
+            gameState.hasResearcherUnlocked = true;
+            setTimeout(() => {
+                addLog("Доступен новый отдел: ИССЛЕДОВАНИЯ.");
+                addLog("Исследователи не пишут факты, но изучают архивы, добывая знания для улучшений.");
+            }, 2000);
+        }
+        
+        updateStatus();
+    }
+}
+
+function upgradeWriter2() {
+    if (gameState.knowledge >= 15) {
+        gameState.knowledge -= 15;
+        gameState.writerLevel += 2;
+        gameState.upgrades.push('dark_web_sources');
+        
+        addLog("Доступ к тёмным архивам получен. Писатели теперь в 3 раза эффективнее!");
+        addThought("Мы зашли слишком далеко, чтобы останавливаться.");
+        
+        updateStatus();
+    }
+}
+
+function getRandomFact() {
+    return facts[Math.floor(Math.random() * facts.length)];
+}
+
+// ============================================
+// ПАССИВНЫЙ ДОХОД
+// ============================================
 let passiveInterval;
 function startPassiveIncome() {
     if (passiveInterval) return;
@@ -329,18 +271,18 @@ function startPassiveIncome() {
             const oldIdeas = gameState.ideas;
             gameState.ideas += ideasPerTick / 10;
             
-            // Случайные сообщения от писателей (не чаще чем раз в 30 секунд)
+            // Случайные сообщения от писателей
             const now = Date.now();
             if (Math.floor(gameState.ideas / 15) > Math.floor(oldIdeas / 15) && 
                 Math.random() > 0.7 && 
                 (now - lastMessageTime) > 30000) {
                 const message = writerMessages[Math.floor(Math.random() * writerMessages.length)];
-                addLog(`${message}`);
+                addLog(message);
                 lastMessageTime = now;
             }
         }
         
-        // Ресерчеры генерируют знания
+        // Исследователи генерируют знания
         if (gameState.researchers > 0) {
             gameState.knowledge += gameState.researchers * 0.05;
         }
@@ -350,18 +292,127 @@ function startPassiveIncome() {
 }
 
 // ============================================
-// ИНИЦИАЛИЗАЦИЯ
+// СОХРАНЕНИЕ И ЗАГРУЗКА
+// ============================================
+function saveGame() {
+    const saveData = {
+        ...gameState,
+        lastSave: Date.now()
+    };
+    
+    localStorage.setItem('factFactorySave', JSON.stringify(saveData));
+    addLog("Игра сохранена.", 'thought');
+}
+
+function loadGame() {
+    const saved = localStorage.getItem('factFactorySave');
+    if (saved) {
+        try {
+            const loaded = JSON.parse(saved);
+            
+            // Сохраняем только допустимые свойства
+            const validKeys = Object.keys(gameState);
+            for (const key of validKeys) {
+                if (key in loaded) {
+                    gameState[key] = loaded[key];
+                }
+            }
+            
+            gameState.lastSave = Date.now();
+            
+            addLog("Игра загружена.", 'thought');
+            
+            // Запускаем пассивный доход, если есть писатели
+            if (gameState.writers > 0 && !passiveInterval) {
+                startPassiveIncome();
+            }
+            
+            updateStatus();
+        } catch (e) {
+            addLog("Ошибка загрузки сохранения.", 'thought');
+            console.error(e);
+        }
+    } else {
+        addLog("Нет сохранённой игры.", 'thought');
+    }
+}
+
+function resetGame() {
+    if (confirm("Вы уверены? Весь прогресс будет потерян.")) {
+        // Сбрасываем состояние
+        gameState = {
+            ideas: 0,
+            fame: 0,
+            knowledge: 0,
+            writers: 0,
+            researchers: 0,
+            factsFound: 0,
+            writerLevel: 1,
+            upgrades: [],
+            hasPublished: false,
+            hasWriterUnlocked: false,
+            isWriterHired: false,
+            hasResearcherUnlocked: false,
+            isResearcherHired: false,
+            lastSave: Date.now()
+        };
+        
+        // Очищаем пассивный доход
+        if (passiveInterval) {
+            clearInterval(passiveInterval);
+            passiveInterval = null;
+        }
+        
+        // Очищаем лог
+        logEl.innerHTML = '';
+        
+        // Добавляем начальное сообщение
+        addLog("Игра сброшена. Начните с поиска первого факта.");
+        
+        updateStatus();
+    }
+}
+
+// ============================================
+// НАСТРОЙКА СОБЫТИЙ
+// ============================================
+function setupEventListeners() {
+    // Основные действия
+    clickBtn.addEventListener('click', findFact);
+    publishSafeBtn.addEventListener('click', publishSafe);
+    publishRiskyBtn.addEventListener('click', publishRisky);
+    
+    // Штат сотрудников
+    hireWriterBtn.addEventListener('click', hireWriter);
+    hireResearcherBtn.addEventListener('click', hireResearcher);
+    
+    // Улучшения
+    upgradeWriterBtn.addEventListener('click', upgradeWriter);
+    upgradeWriter2Btn.addEventListener('click', upgradeWriter2);
+    
+    // Система
+    saveBtn.addEventListener('click', saveGame);
+    loadBtn.addEventListener('click', loadGame);
+    resetBtn.addEventListener('click', resetGame);
+    clearLogBtn.addEventListener('click', () => {
+        logEl.innerHTML = '';
+        addLog("Лог очищен.");
+    });
+}
+
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ ИГРЫ
 // ============================================
 function initGame() {
-    // Очищаем лог
-    logContent.innerHTML = '';
-    
-    // Добавляем начальные сообщения
-    addLog("Готов к работе. Нажмите [НАЙТИ ФАКТ], чтобы начать.");
-    addLog("Добро пожаловать в редакцию 'Факт'. Вы один. Начните с поиска первого факта.");
-    addLog("Система инициализирована.");
-    
+    setupEventListeners();
     updateStatus();
+    
+    addLog("Система инициализирована.");
+    addLog("Добро пожаловать в редакцию 'Факт'. Вы один.");
+    addLog("Нажмите 'НАЙТИ ФАКТ', чтобы начать.");
+    
+    // Пытаемся загрузить сохранение
+    loadGame();
 }
 
 // Запуск игры

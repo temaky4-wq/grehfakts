@@ -7,6 +7,12 @@ let state = {
     hasPublished: false,
     hasWriterUnlocked: false,
     isWriterHired: false
+    knowledge: 0,           // Новая валюта: знания (за исследование)
+    writerLevel: 1,         // Уровень писателя (базовая эффективность)
+    upgrades: [],           // Купленные улучшения
+    researchers: 0,         // Количество ресерчеров
+    hasResearcherUnlocked: false,
+    isResearcherHired: false
 };
 
 // DOM элементы
@@ -44,6 +50,8 @@ function updateStatus() {
     ideasEl.textContent = state.ideas;
     fameEl.textContent = state.fame;
     staffEl.textContent = state.writers;
+    document.getElementById('knowledge').textContent = state.knowledge;
+    document.getElementById('researchers').textContent = state.researchers;
 }
 
 // Функция показа случайного факта
@@ -180,21 +188,29 @@ function startPassiveIncome() {
     
     passiveInterval = setInterval(() => {
         if (state.writers > 0) {
+            // Писатели генерируют идеи с учетом уровня
+            const ideasPerTick = state.writers * state.writerLevel;
             const oldIdeas = state.ideas;
-            state.ideas += state.writers;
+            state.ideas += ideasPerTick;
             updateStatus();
             
-            // Периодически (каждые 10 идей) показываем сообщение от писателя
-            if (Math.floor(state.ideas / 10) > Math.floor(oldIdeas / 10)) {
+            // Каждые 10 идей - сообщение (реже)
+            if (Math.floor(state.ideas / 10) > Math.floor(oldIdeas / 10) && Math.random() > 0.7) {
                 const writerMessages = [
                     "Писатель: 'Нашёл упоминание о Факте #666... Его изъяли из всех архивов.'",
-                    "Писатель: 'Кто-то подбросил на стол записку: \"Остановись, пока не поздно\".'",
+                    "Писатель: 'Кто-то был в нашем архиве ночью. Файлы переставлены.'",
                     "Писатель: 'Следы ведут к организации \"Инквизиция 2.0\". Шутка? Не думаю.'"
                 ];
                 addLog(`> ${writerMessages[Math.floor(Math.random() * writerMessages.length)]}`);
             }
         }
-    }, 2000); // 1 идея каждые 2 секунды от каждого писателя
+        
+        // Ресерчеры генерируют знания
+        if (state.researchers > 0) {
+            state.knowledge += state.researchers * 0.5; // 0.5 знания/сек за ресерчера
+            updateStatus();
+        }
+    }, 2000);
 }
 
 // Инициализация

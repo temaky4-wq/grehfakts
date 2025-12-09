@@ -5,36 +5,89 @@
     <title>Фабрика Фактов // Тёмная Комната</title>
     <link rel='stylesheet' href='style.css'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Пустая иконка для избежания 404 ошибки -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
     <div class='container'>
         <header>
-            <h1>🚨 ФАБРИКА ФАКТОВ // ЛОГ СИСТЕМЫ</h1>
+            <h1>🚨 ФАБРИКА ФАКТОВ</h1>
             <div class='status-bar'>
-                <span>📝 ИДЕИ: <strong id='ideas'>0</strong></span>
-                <span>⭐ СЛАВА: <strong id='fame'>0</strong></span>
-                <span>👥 ПИСАТЕЛИ: <strong id='writers'>0</strong></span>
-                <span>🧠 ЗНАНИЯ: <strong id='knowledge'>0</strong></span>
-                <span>🔍 РЕСЕРЧЕРЫ: <strong id='researchers'>0</strong></span>
+                <div class="resource">
+                    <span class="resource-icon">📝</span>
+                    <span class="resource-label">Идеи:</span>
+                    <strong id='ideas'>0</strong>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">⭐</span>
+                    <span class="resource-label">Слава:</span>
+                    <strong id='fame'>0</strong>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">👥</span>
+                    <span class="resource-label">Писатели:</span>
+                    <strong id='writers'>0</strong>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">🧠</span>
+                    <span class="resource-label">Знания:</span>
+                    <strong id='knowledge'>0</strong>
+                </div>
+                <div class="resource">
+                    <span class="resource-icon">🔍</span>
+                    <span class="resource-label">Исследователи:</span>
+                    <strong id='researchers'>0</strong>
+                </div>
             </div>
         </header>
 
-        <main>
-            <!-- Лог событий (основное игровое пространство) -->
-            <div id='log' class='log'>
-                <!-- Контент будет добавляться через JS -->
-            </div>
-            
-            <!-- Кнопка поиска факта теперь отдельно -->
-            <div class="action-panel">
-                <a href='#' class='cmd' id='cmd-click'>[ НАЙТИ ФАКТ ]</a>
-            </div>
+        <main class="game-layout">
+            <!-- Левая колонка: лог событий -->
+            <section class="log-section">
+                <h2>📋 ЛОГ СОБЫТИЙ</h2>
+                <div id='log' class='log'>
+                    <!-- Сообщения будут добавляться здесь -->
+                </div>
+                <div class="log-controls">
+                    <button id="clear-log" class="small-btn">Очистить лог</button>
+                    <span class="hint">Новые события появляются сверху</span>
+                </div>
+            </section>
+
+            <!-- Правая колонка: управление -->
+            <section class="control-section">
+                <h2>⚙️ УПРАВЛЕНИЕ</h2>
+                
+                <div class="control-group">
+                    <h3>Основные действия</h3>
+                    <button id="cmd-click" class="action-btn primary">🔍 НАЙТИ ФАКТ</button>
+                    <button id="cmd-publish-safe" class="action-btn" disabled>📰 Опубликовать безопасно (1 идея → 1 слава)</button>
+                    <button id="cmd-publish-risky" class="action-btn risky" disabled>🎲 Опубликовать рискованно (1 идея → 2 славы, 70%)</button>
+                </div>
+
+                <div class="control-group" id="staff-controls">
+                    <h3>Штат сотрудников</h3>
+                    <button id="cmd-hire-writer" class="action-btn" disabled>👥 Нанять писателя (10 славы)</button>
+                    <button id="cmd-hire-researcher" class="action-btn" disabled>🔍 Нанять исследователя (25 славы)</button>
+                </div>
+
+                <div class="control-group" id="upgrade-controls">
+                    <h3>Улучшения</h3>
+                    <button id="cmd-upgrade-writer" class="action-btn upgrade" disabled>⚡ Слепая печать (5 знаний)</button>
+                    <button id="cmd-upgrade-writer2" class="action-btn upgrade" disabled>🌐 Тёмные архивы (15 знаний)</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>Система</h3>
+                    <button id="save-game" class="small-btn">💾 Сохранить игру</button>
+                    <button id="load-game" class="small-btn">📂 Загрузить игру</button>
+                    <button id="reset-game" class="small-btn danger">🔄 Сбросить игру</button>
+                </div>
+            </section>
         </main>
 
         <footer>
             <p class='hint'>// Каждый факт приближает вас к разгадке. Каждая публикация — к влиянию.</p>
+            <p class="version">Фабрика Фактов v1.0 | Логов вниз, управление всегда под рукой</p>
         </footer>
     </div>
     <script src='game.js'></script>

@@ -125,3 +125,74 @@ header h1 {
         padding: 15px;
     }
 }
+
+/* ============================================
+   НОВЫЙ ЛОГ - СВЕРХУ ВНИЗ
+   ============================================ */
+
+.log {
+    height: 500px;
+    border: 1px solid #333;
+    padding: 20px;
+    margin-bottom: 20px;
+    overflow-y: auto;
+    background: #111;
+    border-radius: 5px;
+    font-size: 0.95em;
+    display: flex;
+    flex-direction: column-reverse; /* Ключевое свойство! */
+}
+
+/* Контейнер для сообщений */
+.log-content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Сообщения лога */
+.log p {
+    margin: 8px 0;
+    line-height: 1.5;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Анимация появления сверху */
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* Стили для скроллбара */
+.log::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.log::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.log::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Для мобильных */
+@media (max-width: 768px) {
+    .log {
+        height: 300px;
+        padding: 15px;
+    }
+}

@@ -5,6 +5,8 @@
     <title>Фабрика Фактов // Тёмная Комната</title>
     <link rel='stylesheet' href='style.css'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Пустая иконка для избежания 404 ошибки -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
     <div class='container'>
@@ -22,9 +24,12 @@
         <main>
             <!-- Лог событий (основное игровое пространство) -->
             <div id='log' class='log'>
-                <p>> <em>Система инициализирована.</em></p>
-                <p>> Добро пожаловать в редакцию "Факт". Вы один. Начните с поиска первого факта.</p>
-                <p>> [ <a href='#' class='cmd' id='cmd-click'>НАЙТИ ФАКТ</a> ]</p>
+                <!-- Контент будет добавляться через JS -->
+            </div>
+            
+            <!-- Кнопка поиска факта теперь отдельно -->
+            <div class="action-panel">
+                <a href='#' class='cmd' id='cmd-click'>[ НАЙТИ ФАКТ ]</a>
             </div>
         </main>
 

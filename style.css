@@ -1,0 +1,37 @@
+body {
+    background-color: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+}
+.container { max-width: 800px; margin: 0 auto; }
+.status-bar {
+    background: #1a1a1a;
+    padding: 10px;
+    margin: 15px 0;
+    border-left: 3px solid #ff4444;
+    font-size: 0.9em;
+}
+.status-bar span { margin-right: 20px; }
+.log {
+    min-height: 300px;
+    border: 1px solid #333;
+    padding: 15px;
+    margin-bottom: 20px;
+    overflow-y: auto;
+    background: #111;
+}
+.log p { margin: 10px 0; }
+.cmd {
+    color: #4fc3f7;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+.cmd:hover {
+    color: #fff;
+    background-color: #4fc3f7;
+}
+.hint { color: #777; font-style: italic; font-size: 0.9em; }

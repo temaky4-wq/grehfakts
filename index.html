@@ -4,6 +4,7 @@
     <meta charset='UTF-8'>
     <title>Фабрика Фактов // Тёмная Комната</title>
     <link rel='stylesheet' href='style.css'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div class='container'>
@@ -12,7 +13,9 @@
             <div class='status-bar'>
                 <span>📝 ИДЕИ: <strong id='ideas'>0</strong></span>
                 <span>⭐ СЛАВА: <strong id='fame'>0</strong></span>
-                <span>👥 ШТАТ: <strong id='staff'>0</strong></span>
+                <span>👥 ПИСАТЕЛИ: <strong id='writers'>0</strong></span>
+                <span>🧠 ЗНАНИЯ: <strong id='knowledge'>0</strong></span>
+                <span>🔍 РЕСЕРЧЕРЫ: <strong id='researchers'>0</strong></span>
             </div>
         </header>
 
@@ -23,13 +26,10 @@
                 <p>> Добро пожаловать в редакцию "Факт". Вы один. Начните с поиска первого факта.</p>
                 <p>> [ <a href='#' class='cmd' id='cmd-click'>НАЙТИ ФАКТ</a> ]</p>
             </div>
-
-            <!-- Панель управления (появится позже) -->
-            <div id='controls' class='controls'></div>
         </main>
 
         <footer>
-            <p class='hint'>// Каждый факт приближает вас к разгадке. Каждая подпись — к влиянию.</p>
+            <p class='hint'>// Каждый факт приближает вас к разгадке. Каждая публикация — к влиянию.</p>
         </footer>
     </div>
     <script src='game.js'></script>
